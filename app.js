@@ -52,8 +52,15 @@ api.post('/', async (req, res) => {
             }
         }
 
-        const emailsList = emails.join('\n');
-        res.send(emailsList);
+        var emailsList = await JSON.stringify(emails)
+        emailsList = emailsList.split('"').join()
+        emailsList = emailsList.split('[').join()
+        emailsList = emailsList.split(']').join()
+        emailsList = emailsList.split(',,,').join(",")
+        emailsList = emailsList.split(',').join("\n")
+        emailsList = emailsList.split(' ').join("\n")
+        emailsList = emailsList.replace(/\n/g, '<br>');
+        res.send(emailsList)
         res.status(200).end();
     } catch (err) {
         console.error(err);

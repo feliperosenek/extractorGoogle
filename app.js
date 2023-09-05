@@ -29,18 +29,30 @@ api.get('/', (req, res) => {
         
         h1 {
             margin-bottom: 34px;
-        }</style>
+        }
+        .search{
+            display:none
+        }
+        </style>
+        <script>
+        function search(){
+            console.log("ok")
+           document.querySelector("#search").style = "display:block;margin-top:30px; color:red"
+           document.querySelector("#btn-search").style = "display:none"
+        }
+        </script>
         <h1 class="text-center" >Pesquisa E-mails Google</h1>
-        <form action="/" method="POST">
+        <form action="https://extractorgoogle-production.up.railway.app" method="POST">
         <div class="form-group">
         <textarea class="form-control" name="data" rows="5" cols="5"></textarea>
       </div>
       <div style="margin-top:30px" class="row">
       <div class="col-md-12 text-center">
-      <button type="submit" class="btn btn-primary btn-lg">Pesquisar</button>
+      <button id="btn-search" type="submit" onclick="search()" class="btn btn-primary btn-lg">Pesquisar</button>
         </div>
         </div>
         </form>
+        <h4 id="search" class="text-center search">pesquisando...</h4>
     </body>
     </html>
     `

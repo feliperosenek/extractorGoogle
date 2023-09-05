@@ -11,6 +11,11 @@ api.use(express.urlencoded({
 api.use(bodyParser.urlencoded({ extended: false }))
 api.use(bodyParser.json())
 
+function removerCaracteresAposBr(email) {
+    const novoEmail = email.replace(/\.br.*/, '.br');
+    return novoEmail;
+  }
+
 api.get('/', (req, res) => {
     const form = `<!DOCTYPE html>
     <html>
@@ -47,7 +52,7 @@ api.post('/', async (req, res) => {
 
             if (emailsEncontrados) {
                 emailsEncontrados.forEach(email => {
-                    emails.push(email);
+                    emails.push(removerCaracteresAposBr(email));
                 });
             }
         }

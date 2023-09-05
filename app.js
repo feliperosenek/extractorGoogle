@@ -1,7 +1,7 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs')
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const cheerio = require('cheerio'); // Adicionamos Cheerio
+const axios = require('axios'); // Adicionamos Axios
 
 const api = express();
 api.use(express.json());
@@ -11,106 +11,55 @@ api.use(express.urlencoded({
 api.use(bodyParser.urlencoded({ extended: false }))
 api.use(bodyParser.json())
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+api.get('/', (req, res) => {
+    const form = `<!DOCTYPE html>
+    <html>
+    <body>
+        <h1>Formulário POST</h1>
+        <form action="/" method="POST">
+            <textarea id="mensagem" name="data" rows="4" cols="50" required></textarea><br><br>
+            <input type="submit" value="Enviar">
+        </form>
+    </body>
+    </html>
+    `
+    res.send(form);
+});
 
-app()
-
-async function app() {
-
-    var options = {
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        ignoreDefaultArgs: ['--disable-extensions'],
-        //headless: false,
-    };
-
-    let browser = await puppeteer.launch(options);
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1366, height: 600 });
-
-    console.log("Browser Opened!");
-
+api.post('/', async (req, res) => {
     try {
+        const search = req.body.data;
+        const emails = [];
 
+        const searchLines = search.split('\n');
 
-        const form = `<!DOCTYPE html>
-        <html>
-        <body>
-            <h1>Formulário POST</h1>
-            <form action="https://extractorgoogle-production.up.railway.app" method="POST">
-                <textarea id="mensagem" name="data" rows="4" cols="50" required></textarea><br><br>
-        
-                <input type="submit" value="Enviar">
-            </form>
-        </body>
-        </html>
-        `
+        for (const line of searchLines) {
+            const formattedLine = line.trim().replace(/\s+/g, '+');
+            const googleUrl = `https://www.google.com/search?q=${formattedLine}`;
 
-        api.get('/', async (req, res) => {
-            res.send(form)
-        })
+            const response = await axios.get(googleUrl);
+            const html = response.data;
 
-        api.post('/', async (req, res) => {
-            console.log(req.body)
-           
+            const $ = cheerio.load(html);
+            const emailRegex = /[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}/g;
+            const textContent = $('body').text();
+            const emailsEncontrados = textContent.match(emailRegex);
 
-            var search = req.body.data
-            var emails = []
-
-            search = search.split("\n")
-
-            console.log(search)
-
-            var i = search.length
-
-            while (i != 0) {                
-
-                var url = search[i-1].split(" ").join("+")
-                console.log(url)
-
-                await page.goto("https://www.google.com/search?q=" + url)
-
-                await delay(2000)
-
-                const pageContent = await page.evaluate(() => {
-                    return document.body.textContent;
-                  });
-
-                  const emailRegex = /[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}/g;
-                  const emailsEncontrados = pageContent.match(emailRegex);
-                
-                  // Exibir os endereços de e-mail encontrados
-                  if (emailsEncontrados) {
-                    console.log('Endereços de e-mail encontrados:');
-                    emailsEncontrados.forEach(email => {
-                        emails.push(email)
-                        fs.appendFileSync('emails.txt', email+ '\n');
-                    });
-                  } else {
-                    console.log('Nenhum endereço de e-mail encontrado.');
-                  }
-                i--
-
+            if (emailsEncontrados) {
+                emailsEncontrados.forEach(email => {
+                    emails.push(email);
+                });
             }
+        }
 
-            var emailsList = await JSON.stringify(emails)
-            emailsList = emailsList.split('"').join()
-            emailsList = emailsList.split('[').join()
-            emailsList = emailsList.split(']').join()
-            emailsList = emailsList.split(',,,').join(",")
-            emailsList = emailsList.split(',').join("\n")
-            emailsList = emailsList.split(' ').join("\n")
-            emailsList = emailsList.replace(/\n/g, '<br>');
-            res.send(emailsList)
-            res.status(200).end()
-
-        })
-
+        const emailsList = emails.join('\n');
+        res.send(emailsList);
+        res.status(200).end();
     } catch (err) {
-        console.log(err)
-        app()
+        console.error(err);
+        res.status(500).send('Erro interno do servidor');
     }
-}
-
+});
 
 api.listen(process.env.PORT || 3000, () => {
     console.log('API RUN!');

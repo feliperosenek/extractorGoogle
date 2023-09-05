@@ -18,9 +18,9 @@ app()
 async function app() {
 
     var options = {
-        // args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        //ignoreDefaultArgs: ['--disable-extensions'],
-        headless: false,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        ignoreDefaultArgs: ['--disable-extensions'],
+        //headless: false,
     };
 
     let browser = await puppeteer.launch(options);

@@ -36,7 +36,7 @@ async function app() {
         <html>
         <body>
             <h1>Formulário POST</h1>
-            <form action="http://localhost:3000" method="POST">
+            <form action="https://extractorgoogle-production.up.railway.app" method="POST">
                 <textarea id="mensagem" name="data" rows="4" cols="50" required></textarea><br><br>
         
                 <input type="submit" value="Enviar">
